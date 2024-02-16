@@ -30,7 +30,6 @@ repositories {
 }
 
 dependencies {
-    compileOnly("org.spigotmc:spigot-api:1.8.8-R0.1-SNAPSHOT")
     compileOnly("me.lucko:helper:5.6.10")
 
     compileOnly("redis.clients:jedis:3.6.1")
