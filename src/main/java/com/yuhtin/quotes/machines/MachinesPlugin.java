@@ -12,6 +12,8 @@ public class MachinesPlugin extends ExtendedJavaPlugin {
     @Override
     protected void enable() {
 
+
+
     }
 
     public static MachinesPlugin getInstance() {
