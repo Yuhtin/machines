@@ -7,6 +7,8 @@ import net.minecraft.server.v1_8_R3.NBTTagList;
 import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
@@ -228,8 +230,20 @@ public class ItemBuilder {
     }
 
 
+    public void amount(int amount) {
+        item.setAmount(amount);
+    }
+
+    public void glowing() {
+        item.addEnchantment(Enchantment.DURABILITY, 1);
+        hideFlags();
+    }
+
+    public void hideFlags() {
+        changeItemMeta(it -> it.addItemFlags(ItemFlag.values()));
+    }
+
     public ItemStack wrap() {
         return item;
     }
-
 }
