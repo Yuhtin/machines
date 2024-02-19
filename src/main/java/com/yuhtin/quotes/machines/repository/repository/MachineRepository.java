@@ -3,7 +3,6 @@ package com.yuhtin.quotes.machines.repository.repository;
 import com.henryfabio.sqlprovider.executor.SQLExecutor;
 import com.yuhtin.quotes.machines.model.Machine;
 import com.yuhtin.quotes.machines.repository.adapters.MachineAdapter;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import me.lucko.helper.Schedulers;
 import me.lucko.helper.promise.Promise;
@@ -30,8 +29,8 @@ public final class MachineRepository {
         sqlExecutor.updateQuery("CREATE TABLE IF NOT EXISTS " + TABLE + "(" +
                 "encodedLocation INT NOT NULL PRIMARY KEY," +
                 "username CHAR(36) NOT NULL," +
+                "yawPlaced DOUBLE NOT NULL DEFAULT 0," +
                 "machine_data_id INT NOT NULL," +
-                "fuel_consume_interval INT NOT NULL DEFAULT 10," +
                 "active BOOLEAN NOT NULL DEFAULT FALSE," +
                 "cycles INT NOT NULL DEFAULT -1," +
                 "fuel_amount INT NOT NULL DEFAULT 0," +
@@ -54,22 +53,22 @@ public final class MachineRepository {
     }
 
     public void insert(Machine machine) {
-        sqlExecutor.updateQuery(
+        Schedulers.async().run(() -> sqlExecutor.updateQuery(
                 "INSERT INTO " + TABLE + " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 statement -> {
                     statement.set(1, machine.getEncodedLocation());
                     statement.set(2, machine.getOwner());
-                    statement.set(3, machine.getMachineDataId());
-                    statement.set(4, machine.getFuelConsumeInterval());
+                    statement.set(3, machine.getYawPlaced());
+                    statement.set(4, machine.getMachineDataId());
                     statement.set(5, machine.isActive());
                     statement.set(6, machine.getCycles());
                     statement.set(7, machine.getFuelAmount());
                     statement.set(8, machine.getDrops());
                 }
-        );
+        ));
     }
 
-    public static MachineRepository getInstance() {
+    public static MachineRepository instance() {
         return INSTANCE;
     }
 }
