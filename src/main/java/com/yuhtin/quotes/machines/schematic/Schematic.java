@@ -8,6 +8,11 @@ import com.sk89q.worldedit.math.transform.AffineTransform;
 import com.sk89q.worldedit.session.ClipboardHolder;
 import com.yuhtin.quotes.machines.MachinesPlugin;
 import lombok.Getter;
+import me.lucko.helper.Schedulers;
+import me.lucko.helper.bucket.Bucket;
+import me.lucko.helper.bucket.BucketPartition;
+import me.lucko.helper.bucket.factory.BucketFactory;
+import me.lucko.helper.bucket.partitioning.PartitioningStrategies;
 import me.lucko.helper.scheduler.Task;
 import me.lucko.helper.scheduler.builder.TaskBuilder;
 import org.bukkit.*;
@@ -35,28 +40,26 @@ import java.util.stream.Collectors;
  */
 public class Schematic {
 
-    private final MachinesPlugin plugin;
-
-    @Getter
-    private final List<BaseBlock> blocks;
     private final Clipboard clipboard;
 
 
-    /**
-     * @param plugin your plugin instance
-     */
-    public Schematic(MachinesPlugin plugin, String schematicFileName) throws IllegalArgumentException, IOException {
-        this.plugin = plugin;
-        this.blocks = new ArrayList<>();
-
+    public Schematic(String schematicFileName) throws IllegalArgumentException, IOException {
         File file = new File("plugins/WorldEdit/schematics/" + schematicFileName);
-        if (!file.exists()) throw new IllegalArgumentException("Schematic file not found");
+        if (!file.exists()) throw new IllegalArgumentException("Schematic file not found in plugins/WorldEdit/schematics/" + schematicFileName);
 
         clipboard = FaweAPI.load(file).getClipboard();
         if (clipboard == null) throw new IllegalArgumentException("Schematic file is not a valid schematic");
+    }
 
-        Vector minimumPoint = clipboard.getMinimumPoint();
-        Vector maximumPoint = clipboard.getMaximumPoint();
+    public void cleanUpSchematic(Location loc, double yaw) {
+        ClipboardHolder clipboardHolder = new ClipboardHolder(clipboard, FaweAPI.getWorld(loc.getWorld().getName()).getWorldData());
+        clipboardHolder.setTransform(new AffineTransform().rotateY(yaw));
+
+        Clipboard transformedClipboard = clipboardHolder.getClipboard();
+
+        Bucket<Location> bucket = BucketFactory.newHashSetBucket(60, PartitioningStrategies.random());
+        Vector minimumPoint = transformedClipboard.getMinimumPoint();
+        Vector maximumPoint = transformedClipboard.getMaximumPoint();
         int minX = minimumPoint.getBlockX();
         int maxX = maximumPoint.getBlockX();
         int minY = minimumPoint.getBlockY();
@@ -64,13 +67,42 @@ public class Schematic {
         int minZ = minimumPoint.getBlockZ();
         int maxZ = maximumPoint.getBlockZ();
 
+        final int width = transformedClipboard.getRegion().getWidth();
+        final int height = transformedClipboard.getRegion().getHeight();
+        final int length = transformedClipboard.getRegion().getLength();
+        final int widthCentre = width / 2;
+        final int heightCentre = height / 2;
+        final int lengthCentre = length / 2;
+
+        int minBlockY = loc.getWorld().getMaxHeight();
         for (int x = minX; x <= maxX; x++) {
             for (int y = minY; y <= maxY; y++) {
                 for (int z = minZ; z <= maxZ; z++) {
-                    blocks.add(clipboard.getLazyBlock(x, y, z));
+                    BaseBlock block = clipboard.getLazyBlock(x, y, z);
+                    if (block.getType() <= 0) continue;
+
+                    double offsetX = Math.abs(maxX - x);
+                    double offsetY = Math.abs(maxY - y);
+                    double offsetZ = Math.abs(maxZ - z);
+
+                    Location offsetLoc = loc.clone().subtract(offsetX - widthCentre, offsetY - heightCentre, offsetZ - lengthCentre);
+                    if (offsetLoc.getBlockY() < minBlockY) minBlockY = offsetLoc.getBlockY();
+
+                    bucket.add(offsetLoc);
                 }
             }
         }
+
+        Scheduler scheduler = new Scheduler();
+        scheduler.setTask(Schedulers.sync().runRepeating(() -> {
+            BucketPartition<Location> next = bucket.asCycle().next();
+            if (next.isEmpty()) {
+                scheduler.cancel();
+                return;
+            }
+
+            next.forEach(location -> location.getBlock().setType(Material.AIR));
+        }, 1, 20).getBukkitId());
     }
 
     /**
@@ -81,7 +113,7 @@ public class Schematic {
      * @return collection of locations where schematic blocks will be pasted, null if schematic locations will replace blocks
      */
     @Nullable
-    public Collection<Location> pasteSchematic(final Location loc, final Player paster, final int time, final Options... option) {
+    public Collection<Location> pasteSchematic(final Location loc, final Player paster, Runnable runnable, final int time, final Options... option) {
         final Map<Location, BaseBlock> pasteBlocks = new LinkedHashMap<>();
         final List<Options> options = Arrays.asList(option);
         try {
@@ -159,7 +191,7 @@ public class Schematic {
                 }
 
                 if (!options.contains(Options.PREVIEW) && !options.contains(Options.USE_GAME_MARKER)) {
-                    Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, () -> {
+                    Schedulers.async().runLater(() -> {
                         if (validate.getBlock().getType() == Material.AIR)
                             paster.sendBlockChange(validate.getBlock().getLocation(), Material.AIR, (byte) 0);
                     }, 60);
@@ -196,12 +228,16 @@ public class Schematic {
 
                 block.getState().update(true, false);
 
-                block.getLocation().getWorld().playEffect(block.getLocation(), Effect.CLOUD, 6);
-                block.getLocation().getWorld().playEffect(block.getLocation(), Effect.STEP_SOUND, block.getType());
+                Location location = block.getLocation();
+                World world = location.getWorld();
+                world.playEffect(location, Effect.CLOUD, 6);
+                world.playEffect(location, Effect.STEP_SOUND, block.getType());
+                world.playEffect(location.clone().add(.5, 0, .5), Effect.HAPPY_VILLAGER, 2);
 
                 tracker.trackCurrentBlock++;
 
                 if (tracker.trackCurrentBlock >= pasteBlocks.size()) {
+                    runnable.run();
                     task.get().stop();
                     tracker.trackCurrentBlock = 0;
                 }
@@ -213,30 +249,6 @@ public class Schematic {
             e.printStackTrace();
         }
         return null;
-    }
-
-    public boolean animatedPaste(Player player, Block block) {
-        Collection<Location> locationCollection = pasteSchematic(block.getLocation().clone(), player, 1, Schematic.Options.IGNORE_TRANSPARENT);
-
-        if (locationCollection != null) {
-            List<Location> locations = new ArrayList<>(locationCollection);
-            Scheduler scheduler = new Scheduler();
-            scheduler.setTask(Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, () -> {
-                for (Location location : locations) {
-                    if (locations.get(locations.size() - 1).getBlock().getType() != Material.AIR) {
-                        scheduler.cancel();
-                    } else {
-                        if (location.getBlock().getType() == Material.AIR) {
-                            location.getWorld().playEffect(location.clone().add(.5, 0, .5), Effect.HAPPY_VILLAGER, 2);
-                        }
-                    }
-                }
-            }, 0L, 40L));
-
-            return true;
-        } else {
-            return false;
-        }
     }
 
     private int roundHalfUp(int value) {
@@ -251,8 +263,8 @@ public class Schematic {
      * @param options  options to apply to this paste
      * @return list of locations where schematic blocks will be pasted, null if schematic locations will replace blocks
      */
-    public Collection<Location> pasteSchematic(final Location location, final Player paster, final Options... options) {
-        return pasteSchematic(location, paster, 20, options);
+    public Collection<Location> pasteSchematic(final Location location, final Player paster, Runnable runnable, final Options... options) {
+        return pasteSchematic(location, paster, runnable, 20, options);
     }
 
     /**
