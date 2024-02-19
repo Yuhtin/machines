@@ -5,6 +5,8 @@ import com.henryfabio.sqlprovider.executor.SQLExecutor;
 import com.yuhtin.quotes.machines.cache.FuelCache;
 import com.yuhtin.quotes.machines.cache.MachineCache;
 import com.yuhtin.quotes.machines.cache.MachineDataCache;
+import com.yuhtin.quotes.machines.command.MachineCommand;
+import com.yuhtin.quotes.machines.listener.MachinePlaceListener;
 import com.yuhtin.quotes.machines.repository.SQLProvider;
 import com.yuhtin.quotes.machines.repository.repository.MachineRepository;
 import me.lucko.helper.plugin.ExtendedJavaPlugin;
@@ -21,6 +23,9 @@ public class MachinesPlugin extends ExtendedJavaPlugin {
         loadFileData();
         loadDatabase();
         loadMachineData();
+
+        bindModule(new MachineCommand());
+        bindModule(new MachinePlaceListener());
 
         getLogger().info("Plugin ligado com sucesso!");
     }

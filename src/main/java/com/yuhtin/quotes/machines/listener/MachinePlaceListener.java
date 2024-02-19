@@ -28,11 +28,11 @@ import static me.lucko.helper.text3.Text.colorize;
 @AllArgsConstructor
 public class MachinePlaceListener implements TerminableModule {
 
-    private final MachineCache cache;
-    private final MachineDataCache dataCache;
-
     @Override
     public void setup(@NotNull TerminableConsumer consumer) {
+
+        MachineCache cache = MachineCache.instance();
+        MachineDataCache dataCache = MachineDataCache.instance();
 
         Events.subscribe(BlockPlaceEvent.class, EventPriority.HIGHEST)
                 .handler(event -> {
