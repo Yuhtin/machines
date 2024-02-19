@@ -32,9 +32,8 @@ repositories {
 dependencies {
     compileOnly("me.lucko:helper:5.6.10")
 
-    compileOnly("redis.clients:jedis:3.6.1")
+    compileOnly("com.github.MilkBowl:VaultAPI:1.7")
     compileOnly("com.github.ben-manes.caffeine:caffeine:3.0.4")
-
     compileOnly("com.mojang:authlib:1.5.25")
 
     compileOnly(fileTree("/libs"))
