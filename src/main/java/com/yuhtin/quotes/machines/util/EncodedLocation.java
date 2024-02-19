@@ -1,8 +1,10 @@
 package com.yuhtin.quotes.machines.util;
 
+import lombok.RequiredArgsConstructor;
 import org.bukkit.Location;
 import org.bukkit.World;
 
+@RequiredArgsConstructor(access = lombok.AccessLevel.PRIVATE)
 public class EncodedLocation {
 
     private final int encoded;
@@ -20,6 +22,10 @@ public class EncodedLocation {
 
     public static EncodedLocation encode(Location location) {
         return new EncodedLocation(location.getBlockX(), location.getBlockY(), location.getBlockZ());
+    }
+
+    public static EncodedLocation of(int encoded) {
+        return new EncodedLocation(encoded);
     }
 
     @Override
