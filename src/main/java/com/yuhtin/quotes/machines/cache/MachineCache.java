@@ -1,11 +1,11 @@
 package com.yuhtin.quotes.machines.cache;
 
 import com.yuhtin.quotes.machines.model.Machine;
+import com.yuhtin.quotes.machines.repository.repository.MachineRepository;
 import com.yuhtin.quotes.machines.util.EncodedLocation;
 import lombok.Data;
 import me.lucko.helper.Schedulers;
 import me.lucko.helper.bucket.Bucket;
-import me.lucko.helper.bucket.BucketPartition;
 import me.lucko.helper.bucket.factory.BucketFactory;
 import me.lucko.helper.bucket.partitioning.PartitioningStrategies;
 import me.lucko.helper.scheduler.Task;
@@ -23,6 +23,7 @@ import java.util.Map;
 public class MachineCache {
 
     private static MachineCache instance;
+    private MachineRepository repository = MachineRepository.instance();
 
     private String world;
     private final List<Material> validMaterials = new ArrayList<>();
@@ -43,18 +44,14 @@ public class MachineCache {
         return getMachine(EncodedLocation.encode(location).hashCode());
     }
 
-    public void addMachine(int key, Machine machine) {
-        machines.put(key, machine);
+    public void addMachine(Machine machine) {
+        machines.put(machine.getEncodedLocation(), machine);
         machineBucket.add(machine);
     }
 
     public void removeMachine(int encodedLocation) {
         Machine removed = machines.remove(encodedLocation);
         if (removed != null) machineBucket.remove(removed);
-    }
-
-    public void removeMachine(Location location) {
-        removeMachine(EncodedLocation.encode(location).hashCode());
     }
 
     public void enableTicking() {
@@ -65,16 +62,16 @@ public class MachineCache {
         machineBucket.clear();
         machineBucket.addAll(machines.values());
 
-        task = Schedulers.async().runRepeating(() -> {
-            BucketPartition<Machine> part = machineBucket.asCycle().next();
-            if (part.isEmpty()) return;
+        task = Schedulers.async()
+                .runRepeating(() -> machineBucket.asCycle()
+                        .next()
+                        .forEach(this::updateMachine), 1, 1
+                );
+    }
 
-            for (Machine machine : part) {
-                if (!machine.isActive() || !machine.tick()) {
-                    machineBucket.remove(machine);
-                }
-            }
-        }, 1, 1);
+    private void updateMachine(Machine machine) {
+        machine.tick();
+        repository.insert(machine);
     }
 
     public static MachineCache instance() {

@@ -1,10 +1,14 @@
 package com.yuhtin.quotes.machines.cache;
 
+import com.yuhtin.quotes.machines.MachinesPlugin;
 import com.yuhtin.quotes.machines.model.Fuel;
 import com.yuhtin.quotes.machines.util.ItemBuilder;
+import com.yuhtin.quotes.machines.util.ItemParser;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.HashMap;
 
 public class FuelCache {
@@ -19,6 +23,10 @@ public class FuelCache {
 
     public Fuel get(int id) {
         return fuels.get(id);
+    }
+
+    public Collection<Integer> getIds() {
+        return fuels.keySet();
     }
 
     @Nullable
@@ -36,4 +44,20 @@ public class FuelCache {
         return instance;
     }
 
+    public void reload() {
+        fuels.clear();
+
+        MachinesPlugin plugin = MachinesPlugin.getInstance();
+        ConfigurationSection config = plugin.getConfig().getConfigurationSection("fuels");
+        for (String key : config.getKeys(false)) {
+            ConfigurationSection section = config.getConfigurationSection(key);
+
+            Fuel fuel = new Fuel(
+                    Integer.parseInt(key),
+                    ItemParser.of(section).parseItem()
+            );
+
+            register(fuel);
+        }
+    }
 }
