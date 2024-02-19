@@ -1,0 +1,48 @@
+database:
+  type: mysql
+  sqlite:
+    file: 'database.db'
+  mysql:
+    address: ''
+    database: ''
+    username: ''
+    password: ''
+
+machines:
+  1:
+    customName: '&aMineradora Tipo I'
+    lore:
+      - '&7Essa é uma mineradora básica, de tamanho pequeno'
+      - '&7Essa mineradora não é super rápida, mas pode ser útil'
+      - '&7Para automatizar seu trabalho de minerador'
+      - ''
+      - '&7Combustível: &e&LCARVAO VEGETAL'
+      - '&7Preço: &E&L10.000'
+      - ''
+      - '&eClique para comprar!'
+    requiredFuelId: 1
+    spendFuelInterval: 1
+    price: 10000
+    sellDropPrice: 5
+    maxDrops: 2304
+    schematicFile: 'mineradora_tipo_1.schematic'
+    item:
+      material: 'FURNACE'
+      customName: '&aMineradora Tipo I'
+      lore: []
+      glow: true
+
+fuels:
+  1:
+    material: 'COAL'
+    customName: '&eCarvão Vegetal'
+    lore:
+      - '&7Esse é um combustível comum'
+      - '&7Ele é usado para alimentar mineradoras'
+      - '&7Ele é barato e fácil de encontrar'
+    burnTime: 200
+    item:
+      material: 'COAL'
+      customName: '&eCarvão Vegetal'
+      lore: []
+      glow: true
