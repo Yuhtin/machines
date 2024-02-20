@@ -40,9 +40,3 @@ fuels:
       - '&7Esse é um combustível comum'
       - '&7Ele é usado para alimentar mineradoras'
       - '&7Ele é barato e fácil de encontrar'
-    burnTime: 200
-    item:
-      material: 'COAL'
-      customName: '&eCarvão Vegetal'
-      lore: []
-      glow: true

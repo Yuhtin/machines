@@ -1,13 +1,13 @@
 package com.yuhtin.quotes.machines.schematic;
 
-import com.boydti.fawe.FaweAPI;
-import com.sk89q.worldedit.Vector;
-import com.sk89q.worldedit.blocks.BaseBlock;
+import com.fastasyncworldedit.core.FaweAPI;
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.extent.clipboard.Clipboard;
+import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.math.transform.AffineTransform;
 import com.sk89q.worldedit.session.ClipboardHolder;
+import com.sk89q.worldedit.world.block.BaseBlock;
 import com.yuhtin.quotes.machines.MachinesPlugin;
-import lombok.Getter;
 import me.lucko.helper.Schedulers;
 import me.lucko.helper.bucket.Bucket;
 import me.lucko.helper.bucket.BucketPartition;
@@ -17,6 +17,7 @@ import me.lucko.helper.scheduler.Task;
 import me.lucko.helper.scheduler.builder.TaskBuilder;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
@@ -47,19 +48,19 @@ public class Schematic {
         File file = new File("plugins/WorldEdit/schematics/" + schematicFileName);
         if (!file.exists()) throw new IllegalArgumentException("Schematic file not found in plugins/WorldEdit/schematics/" + schematicFileName);
 
-        clipboard = FaweAPI.load(file).getClipboard();
+        clipboard = FaweAPI.load(file);
         if (clipboard == null) throw new IllegalArgumentException("Schematic file is not a valid schematic");
     }
 
     public void cleanUpSchematic(Location loc, double yaw) {
-        ClipboardHolder clipboardHolder = new ClipboardHolder(clipboard, FaweAPI.getWorld(loc.getWorld().getName()).getWorldData());
+        ClipboardHolder clipboardHolder = new ClipboardHolder(clipboard);
         clipboardHolder.setTransform(new AffineTransform().rotateY(yaw));
 
         Clipboard transformedClipboard = clipboardHolder.getClipboard();
 
         Bucket<Location> bucket = BucketFactory.newHashSetBucket(60, PartitioningStrategies.random());
-        Vector minimumPoint = transformedClipboard.getMinimumPoint();
-        Vector maximumPoint = transformedClipboard.getMaximumPoint();
+        BlockVector3 minimumPoint = transformedClipboard.getMinimumPoint();
+        BlockVector3 maximumPoint = transformedClipboard.getMaximumPoint();
         int minX = minimumPoint.getBlockX();
         int maxX = maximumPoint.getBlockX();
         int minY = minimumPoint.getBlockY();
@@ -78,8 +79,11 @@ public class Schematic {
         for (int x = minX; x <= maxX; x++) {
             for (int y = minY; y <= maxY; y++) {
                 for (int z = minZ; z <= maxZ; z++) {
-                    BaseBlock block = clipboard.getLazyBlock(x, y, z);
-                    if (block.getType() <= 0) continue;
+                    BlockVector3 at = BlockVector3.at(x, y, z);
+                    BaseBlock block = transformedClipboard.getFullBlock(at);
+
+                    if (block.getBlockType().getMaterial().isAir()) continue;
+
 
                     double offsetX = Math.abs(maxX - x);
                     double offsetY = Math.abs(maxY - y);
@@ -121,19 +125,19 @@ public class Schematic {
 
             double yaw = roundHalfUp((int) paster.getEyeLocation().getYaw());
 
-            ClipboardHolder clipboardHolder = new ClipboardHolder(clipboard, FaweAPI.getWorld(loc.getWorld().getName()).getWorldData());
+            ClipboardHolder clipboardHolder = new ClipboardHolder(clipboard);
             clipboardHolder.setTransform(new AffineTransform().rotateY(yaw));
 
             Clipboard transformedClipboard = clipboardHolder.getClipboard();
 
-            Vector minimumPoint = transformedClipboard.getMinimumPoint();
-            Vector maximumPoint = transformedClipboard.getMaximumPoint();
-            int minX = minimumPoint.getBlockX();
-            int maxX = maximumPoint.getBlockX();
-            int minY = minimumPoint.getBlockY();
-            int maxY = maximumPoint.getBlockY();
-            int minZ = minimumPoint.getBlockZ();
-            int maxZ = maximumPoint.getBlockZ();
+            final BlockVector3 minimumPoint = transformedClipboard.getMinimumPoint();
+            final BlockVector3 maximumPoint = transformedClipboard.getMaximumPoint();
+            final int minX = minimumPoint.getX();
+            final int maxX = maximumPoint.getX();
+            final int minY = minimumPoint.getY();
+            final int maxY = maximumPoint.getY();
+            final int minZ = minimumPoint.getZ();
+            final int maxZ = maximumPoint.getZ();
 
             final int width = transformedClipboard.getRegion().getWidth();
             final int height = transformedClipboard.getRegion().getHeight();
@@ -146,10 +150,13 @@ public class Schematic {
             for (int x = minX; x <= maxX; x++) {
                 for (int y = minY; y <= maxY; y++) {
                     for (int z = minZ; z <= maxZ; z++) {
-                        BaseBlock block = clipboard.getLazyBlock(x, y, z);
+                        final BlockVector3 at = BlockVector3.at(x, y, z);
+                        BaseBlock block = transformedClipboard.getFullBlock(at);
 
-                        if (block.getType() <= 0) continue;
+                        // Ignore air blocks, change if you want
+                        if (block.getBlockType().getMaterial().isAir()) continue;
 
+                        // Here we find the relative offset based off the current location.
                         final double offsetX = Math.abs(maxX - x);
                         final double offsetY = Math.abs(maxY - y);
                         final double offsetZ = Math.abs(maxZ - z);
@@ -166,34 +173,24 @@ public class Schematic {
              */
             boolean validated = true;
             for (Location validate : pasteBlocks.keySet()) {
-                BaseBlock baseBlock = pasteBlocks.get(validate);
-                boolean isWater = validate.clone().subtract(0, 1, 0).getBlock().getType() == Material.WATER;
-                boolean isAir = minBlockY == validate.getBlockY() && validate.clone().subtract(0, 1, 0).getBlock().getType() == Material.AIR;
-                boolean isSolid = validate.getBlock().getType().isSolid();
-                boolean isTransparent = options.contains(Options.IGNORE_TRANSPARENT) && validate.getBlock().getType().isTransparent() && validate.getBlock().getType() != Material.AIR;
+                final BaseBlock baseBlock = pasteBlocks.get(validate);
+                final boolean isWater = validate.clone().subtract(0, 1, 0).getBlock().getType() == Material.WATER;
+                final boolean isAir = minBlockY == validate.getBlockY() && validate.clone().subtract(0, 1, 0).getBlock().getType().getId() <= 0;
+                final boolean isSolid = validate.getBlock().getType().isSolid();
+                final boolean isTransparent = options.contains(Options.IGNORE_TRANSPARENT) && validate.getBlock().isPassable() && validate.getBlock().getType().getId() > 0;
 
                 if (!options.contains(Options.PLACE_ANYWHERE) && (isWater || isAir || isSolid) && !isTransparent) {
-                    if (options.contains(Options.USE_GAME_MARKER)) {
-                        PacketSender.sendBlockHighlight(paster, validate, Color.RED, 51);
-                    } else {
-                        paster.sendBlockChange(validate, Material.STAINED_GLASS, (byte) 14);
-                    }
-
+                    paster.sendBlockChange(validate, Material.RED_STAINED_GLASS.createBlockData());
                     validated = false;
                 } else {
                     if (options.contains(Options.USE_FAKE_BLOCKS)) {
-                        paster.sendBlockChange(validate, baseBlock.getId(), (byte) baseBlock.getData());
-                    } else if (options.contains(Options.USE_GAME_MARKER)) {
-                        PacketSender.sendBlockHighlight(paster, validate, Color.GREEN, 51);
-                    } else {
-                        paster.sendBlockChange(validate, Material.STAINED_GLASS, (byte) 5);
-                    }
+                        paster.sendBlockChange(validate, BukkitAdapter.adapt(baseBlock));
+                    } else paster.sendBlockChange(validate, Material.GREEN_STAINED_GLASS.createBlockData());
                 }
 
                 if (!options.contains(Options.PREVIEW) && !options.contains(Options.USE_GAME_MARKER)) {
-                    Schedulers.async().runLater(() -> {
-                        if (validate.getBlock().getType() == Material.AIR)
-                            paster.sendBlockChange(validate.getBlock().getLocation(), Material.AIR, (byte) 0);
+                    Bukkit.getScheduler().runTaskLaterAsynchronously(MachinesPlugin.getInstance(), () -> {
+                        if (validate.getBlock().getType() == Material.AIR) paster.sendBlockChange(validate.getBlock().getLocation(), Material.AIR.createBlockData());
                     }, 60);
                 }
             }
@@ -220,24 +217,22 @@ public class Schematic {
             tracker.trackCurrentBlock = 0;
 
             Runnable pasteTask = () -> {
+                // Get the block, set the type, data, and then update the state.
                 Location key = (Location) pasteBlocks.keySet().toArray()[tracker.trackCurrentBlock];
-                BaseBlock baseBlock = pasteBlocks.get(key);
-                Block block = key.getBlock();
-                block.setType(Material.getMaterial(baseBlock.getId()), false);
-                block.setData((byte) baseBlock.getData());
+                final BlockData data = BukkitAdapter.adapt(pasteBlocks.get(key));
+                final Block block = key.getBlock();
+                block.setType(data.getMaterial(), false);
+                block.setBlockData(data);
 
                 block.getState().update(true, false);
 
-                Location location = block.getLocation();
-                World world = location.getWorld();
-                world.playEffect(location, Effect.CLOUD, 6);
-                world.playEffect(location, Effect.STEP_SOUND, block.getType());
-                world.playEffect(location.clone().add(.5, 0, .5), Effect.HAPPY_VILLAGER, 2);
+                // Play block effects. Change to what you want.
+                block.getLocation().getWorld().spawnParticle(Particle.CLOUD, block.getLocation(), 6);
+                block.getLocation().getWorld().playEffect(block.getLocation(), Effect.STEP_SOUND, block.getType());
 
                 tracker.trackCurrentBlock++;
 
                 if (tracker.trackCurrentBlock >= pasteBlocks.size()) {
-                    runnable.run();
                     task.get().stop();
                     tracker.trackCurrentBlock = 0;
                 }

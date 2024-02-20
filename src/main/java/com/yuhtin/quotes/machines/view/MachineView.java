@@ -43,7 +43,7 @@ public class MachineView extends SimpleInventory {
             int timeInSeconds = machine.getCycles() + (machine.getFuelAmount() * machine.getFuelConsumeInterval());
             String time = formatTime(timeInSeconds);
 
-            editor.setItem(13, InventoryItem.of(new ItemBuilder(Material.INK_SACK, (short) 10)
+            editor.setItem(13, InventoryItem.of(new ItemBuilder(Material.GREEN_DYE)
                     .name("&aMineradora ligada...")
                     .setLore(
                             "&7A mineradora está ligada, fique de olho para não",
@@ -53,7 +53,7 @@ public class MachineView extends SimpleInventory {
                     ).wrap()
             ));
         } else {
-            editor.setItem(13, InventoryItem.of(new ItemBuilder(Material.INK_SACK, (short) 8)
+            editor.setItem(13, InventoryItem.of(new ItemBuilder(Material.GRAY_DYE)
                     .name("&cSem combustível...")
                     .setLore(
                             "",

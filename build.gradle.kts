@@ -25,16 +25,17 @@ repositories {
 
     maven("https://repo.codemc.io/repository/maven-public/")
     maven("https://jitpack.io")
-    maven("https://repo.luucko.me")
+    maven("https://repo.lucko.me")
     maven("https://libraries.minecraft.net")
 }
 
 dependencies {
     compileOnly("me.lucko:helper:5.6.10")
 
+    compileOnly("org.spigotmc:spigot-api:1.19-R0.1-SNAPSHOT")
     compileOnly("com.github.MilkBowl:VaultAPI:1.7")
     compileOnly("com.github.ben-manes.caffeine:caffeine:3.0.4")
-    compileOnly("com.mojang:authlib:1.5.25")
+    compileOnly("com.mojang:authlib:3.5.41")
 
     compileOnly(fileTree("/libs"))
 
@@ -46,8 +47,8 @@ dependencies {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 tasks.withType<ShadowJar> {
@@ -64,5 +65,5 @@ tasks.withType<ShadowJar> {
 
 tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
-    sourceCompatibility = "11"
+    sourceCompatibility = "17"
 }

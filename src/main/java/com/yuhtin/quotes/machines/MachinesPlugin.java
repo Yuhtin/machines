@@ -1,5 +1,6 @@
 package com.yuhtin.quotes.machines;
 
+import com.henryfabio.minecraft.inventoryapi.manager.InventoryManager;
 import com.henryfabio.sqlprovider.connector.SQLConnector;
 import com.henryfabio.sqlprovider.executor.SQLExecutor;
 import com.yuhtin.quotes.machines.cache.FuelCache;
@@ -20,6 +21,8 @@ public class MachinesPlugin extends ExtendedJavaPlugin {
 
     @Override
     protected void enable() {
+        InventoryManager.enable(this);
+
         loadFileData();
         loadDatabase();
         loadMachineData();
