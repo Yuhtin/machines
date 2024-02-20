@@ -8,6 +8,9 @@ database:
     username: ''
     password: ''
 
+machine-worlds:
+  - 'world'
+
 machines:
   1:
     customName: '&aMineradora Tipo I'

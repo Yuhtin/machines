@@ -36,7 +36,7 @@ public class MachinePlaceListener implements TerminableModule {
 
         Events.subscribe(BlockPlaceEvent.class, EventPriority.HIGHEST)
                 .handler(event -> {
-                    if (!event.getBlock().getWorld().getName().equalsIgnoreCase(cache.getWorld())) return;
+                    if (!dataCache.getWorlds().contains(event.getBlock().getWorld().getName())) return;
 
                     ItemStack itemInHand = event.getItemInHand();
                     if (itemInHand == null) return;
@@ -46,7 +46,7 @@ public class MachinePlaceListener implements TerminableModule {
 
                     Player player = event.getPlayer();
 
-                    if (!cache.getValidMaterials().contains(block.getType())) return;
+                    if (!dataCache.getValidMaterials().contains(block.getType())) return;
 
                     MachineData machineData = dataCache.getByItem(player.getItemInHand());
                     if (machineData == null) return;
@@ -76,12 +76,12 @@ public class MachinePlaceListener implements TerminableModule {
 
         Events.subscribe(BlockBreakEvent.class, EventPriority.HIGHEST)
                 .handler(event -> {
-                    if (!event.getBlock().getWorld().getName().equalsIgnoreCase(cache.getWorld())) return;
+                    if (!dataCache.getWorlds().contains(event.getBlock().getWorld().getName())) return;
 
                     Player player = event.getPlayer();
                     Block block = event.getBlock();
 
-                    if (!cache.getValidMaterials().contains(block.getType())) return;
+                    if (!dataCache.getValidMaterials().contains(block.getType())) return;
 
                     Machine machine = cache.getMachine(block.getLocation());
                     if (machine == null) return;
@@ -123,11 +123,11 @@ public class MachinePlaceListener implements TerminableModule {
         Events.subscribe(PlayerInteractEvent.class, EventPriority.HIGHEST)
                 .handler(event -> {
                     if (event.getAction() != Action.RIGHT_CLICK_BLOCK
-                            || !event.getPlayer().getWorld().getName().equalsIgnoreCase(cache.getWorld()))
+                            || !dataCache.getWorlds().contains(event.getPlayer().getWorld().getName()))
                         return;
 
                     Block block = event.getClickedBlock();
-                    if (!cache.getValidMaterials().contains(block.getType())) return;
+                    if (!dataCache.getValidMaterials().contains(block.getType())) return;
 
                     Machine machine = cache.getMachine(block.getLocation());
                     if (machine == null) return;

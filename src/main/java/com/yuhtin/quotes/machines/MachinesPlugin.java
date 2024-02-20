@@ -10,6 +10,7 @@ import com.yuhtin.quotes.machines.command.MachineCommand;
 import com.yuhtin.quotes.machines.listener.MachinePlaceListener;
 import com.yuhtin.quotes.machines.repository.SQLProvider;
 import com.yuhtin.quotes.machines.repository.repository.MachineRepository;
+import com.yuhtin.quotes.machines.util.VaultAPI;
 import me.lucko.helper.plugin.ExtendedJavaPlugin;
 
 public class MachinesPlugin extends ExtendedJavaPlugin {
@@ -22,6 +23,7 @@ public class MachinesPlugin extends ExtendedJavaPlugin {
     @Override
     protected void enable() {
         InventoryManager.enable(this);
+        VaultAPI.instance().setupEconomy();
 
         loadFileData();
         loadDatabase();
@@ -29,6 +31,8 @@ public class MachinesPlugin extends ExtendedJavaPlugin {
 
         bindModule(new MachineCommand());
         bindModule(new MachinePlaceListener());
+
+        MachineDataCache.instance().setWorlds(getConfig().getStringList("machine-worlds"));
 
         getLogger().info("Plugin ligado com sucesso!");
     }

@@ -46,7 +46,8 @@ public class Schematic {
 
     public Schematic(String schematicFileName) throws IllegalArgumentException, IOException {
         File file = new File("plugins/WorldEdit/schematics/" + schematicFileName);
-        if (!file.exists()) throw new IllegalArgumentException("Schematic file not found in plugins/WorldEdit/schematics/" + schematicFileName);
+        if (!file.exists())
+            throw new IllegalArgumentException("Schematic file not found in plugins/WorldEdit/schematics/" + schematicFileName);
 
         clipboard = FaweAPI.load(file);
         if (clipboard == null) throw new IllegalArgumentException("Schematic file is not a valid schematic");
@@ -175,9 +176,9 @@ public class Schematic {
             for (Location validate : pasteBlocks.keySet()) {
                 final BaseBlock baseBlock = pasteBlocks.get(validate);
                 final boolean isWater = validate.clone().subtract(0, 1, 0).getBlock().getType() == Material.WATER;
-                final boolean isAir = minBlockY == validate.getBlockY() && validate.clone().subtract(0, 1, 0).getBlock().getType().getId() <= 0;
+                final boolean isAir = minBlockY == validate.getBlockY() && validate.clone().subtract(0, 1, 0).getBlock().getType() == Material.AIR;
                 final boolean isSolid = validate.getBlock().getType().isSolid();
-                final boolean isTransparent = options.contains(Options.IGNORE_TRANSPARENT) && validate.getBlock().isPassable() && validate.getBlock().getType().getId() > 0;
+                final boolean isTransparent = options.contains(Options.IGNORE_TRANSPARENT) && validate.getBlock().isPassable() && validate.getBlock().getType() != Material.AIR;
 
                 if (!options.contains(Options.PLACE_ANYWHERE) && (isWater || isAir || isSolid) && !isTransparent) {
                     paster.sendBlockChange(validate, Material.RED_STAINED_GLASS.createBlockData());
@@ -190,7 +191,8 @@ public class Schematic {
 
                 if (!options.contains(Options.PREVIEW) && !options.contains(Options.USE_GAME_MARKER)) {
                     Bukkit.getScheduler().runTaskLaterAsynchronously(MachinesPlugin.getInstance(), () -> {
-                        if (validate.getBlock().getType() == Material.AIR) paster.sendBlockChange(validate.getBlock().getLocation(), Material.AIR.createBlockData());
+                        if (validate.getBlock().getType() == Material.AIR)
+                            paster.sendBlockChange(validate.getBlock().getLocation(), Material.AIR.createBlockData());
                     }, 60);
                 }
             }

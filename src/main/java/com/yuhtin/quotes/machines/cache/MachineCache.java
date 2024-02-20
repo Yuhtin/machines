@@ -25,9 +25,6 @@ public class MachineCache {
     private static MachineCache instance;
     private MachineRepository repository = MachineRepository.instance();
 
-    private String world;
-    private final List<Material> validMaterials = new ArrayList<>();
-
     private final Map<Integer, Machine> machines = new LinkedHashMap<>();
     private final Bucket<Machine> machineBucket = BucketFactory.newHashSetBucket(20, PartitioningStrategies.nextInCycle());
 

@@ -6,21 +6,31 @@ import com.yuhtin.quotes.machines.schematic.Schematic;
 import com.yuhtin.quotes.machines.util.ItemBuilder;
 import com.yuhtin.quotes.machines.util.ItemParser;
 import de.tr7zw.nbtapi.NBTItem;
+import lombok.Data;
+import lombok.Getter;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 
+@Data
 public class MachineDataCache {
 
     private static MachineDataCache instance;
 
     private final HashMap<Integer, MachineData> data = new HashMap<>();
 
+    private List<String> worlds;
+    private final List<Material> validMaterials = new ArrayList<>();
+
     public void register(MachineData machineData) {
         data.put(machineData.getId(), machineData);
+        validMaterials.add(machineData.getItem().getType());
     }
 
     public MachineData get(int id) {
@@ -52,6 +62,7 @@ public class MachineDataCache {
 
     public void reload() {
         data.clear();
+        validMaterials.clear();
 
         MachinesPlugin plugin = MachinesPlugin.getInstance();
         ConfigurationSection config = plugin.getConfig().getConfigurationSection("machines");

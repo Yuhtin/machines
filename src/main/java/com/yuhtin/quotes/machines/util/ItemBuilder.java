@@ -66,7 +66,10 @@ public class ItemBuilder {
     }
 
     public ItemBuilder setLore(List<String> lore) {
-        return changeItemMeta(it -> it.setLore(lore));
+        return changeItemMeta(it -> {
+            List<String> coloredLore = lore.stream().map(Text::colorize).collect(Collectors.toList());
+            it.setLore(coloredLore);
+        });
     }
 
 
@@ -75,7 +78,7 @@ public class ItemBuilder {
     }
 
     public void glowing() {
-        item.addEnchantment(Enchantment.DURABILITY, 1);
+        item.addUnsafeEnchantment(Enchantment.DURABILITY, 1);
         hideFlags();
     }
 
