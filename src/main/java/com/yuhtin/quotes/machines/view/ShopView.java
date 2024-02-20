@@ -23,7 +23,7 @@ import static me.lucko.helper.text3.Text.colorize;
 
 public class ShopView extends PagedInventory {
     public ShopView() {
-        super("machine.shop", "Mineradoras", 6);
+        super("machine.shop", "Mineradoras", 6 * 9);
     }
 
     @Override

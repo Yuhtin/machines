@@ -2,6 +2,7 @@ package com.yuhtin.quotes.machines.model;
 
 import com.yuhtin.quotes.machines.schematic.Schematic;
 import com.yuhtin.quotes.machines.util.ItemBuilder;
+import de.tr7zw.nbtapi.NBTItem;
 import lombok.Builder;
 import lombok.Getter;
 import org.bukkit.Location;
@@ -33,10 +34,10 @@ public class MachineData {
     }
 
     public ItemStack generateItem() {
-        ItemBuilder itemBuilder = new ItemBuilder(item);
-        itemBuilder.setNBTInt("machine-data", id);
-        itemBuilder.setNBTString("machine-unique", String.valueOf(System.currentTimeMillis()));
+        NBTItem nbtItem = new NBTItem(item);
+        nbtItem.setInteger("machine-data", id);
+        nbtItem.setString("machine-unique", String.valueOf(System.currentTimeMillis()));
 
-        return itemBuilder.wrap();
+        return nbtItem.getItem();
     }
 }

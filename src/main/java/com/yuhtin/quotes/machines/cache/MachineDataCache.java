@@ -5,6 +5,7 @@ import com.yuhtin.quotes.machines.model.MachineData;
 import com.yuhtin.quotes.machines.schematic.Schematic;
 import com.yuhtin.quotes.machines.util.ItemBuilder;
 import com.yuhtin.quotes.machines.util.ItemParser;
+import de.tr7zw.nbtapi.NBTItem;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
@@ -36,9 +37,9 @@ public class MachineDataCache {
 
     @Nullable
     public MachineData getByItem(ItemStack machine) {
-        ItemBuilder builder = new ItemBuilder(machine);
-        if (builder.hasNBTKey("machine-data")) {
-            return get(builder.getNBTInt("machine-data"));
+        NBTItem nbtItem = new NBTItem(machine);
+        if (nbtItem.hasTag("machine-data")) {
+            return get(nbtItem.getInteger("machine-data"));
         } else {
             return null;
         }

@@ -4,6 +4,7 @@ import com.yuhtin.quotes.machines.MachinesPlugin;
 import com.yuhtin.quotes.machines.model.Fuel;
 import com.yuhtin.quotes.machines.util.ItemBuilder;
 import com.yuhtin.quotes.machines.util.ItemParser;
+import de.tr7zw.nbtapi.NBTItem;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
@@ -31,9 +32,9 @@ public class FuelCache {
 
     @Nullable
     public Fuel getByItem(ItemStack fuel) {
-        ItemBuilder builder = new ItemBuilder(fuel);
-        if (builder.hasNBTKey("fuel-data")) {
-            return get(builder.getNBTInt("fuel-data"));
+        NBTItem nbtItem = new NBTItem(fuel);
+        if (nbtItem.hasTag("fuel-data")) {
+            return get(nbtItem.getInteger("fuel-data"));
         } else {
             return null;
         }
