@@ -54,7 +54,7 @@ public final class MachineRepository {
 
     public void insert(Machine machine) {
         Schedulers.async().run(() -> sqlExecutor.updateQuery(
-                "INSERT INTO " + TABLE + " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                "REPLACE INTO " + TABLE + " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 statement -> {
                     statement.set(1, machine.getEncodedLocation());
                     statement.set(2, machine.getOwner());

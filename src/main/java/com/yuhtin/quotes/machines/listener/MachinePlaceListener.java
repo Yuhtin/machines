@@ -6,9 +6,11 @@ import com.yuhtin.quotes.machines.cache.MachineDataCache;
 import com.yuhtin.quotes.machines.model.Fuel;
 import com.yuhtin.quotes.machines.model.Machine;
 import com.yuhtin.quotes.machines.model.MachineData;
+import com.yuhtin.quotes.machines.util.EncodedLocation;
 import com.yuhtin.quotes.machines.view.ViewCache;
 import lombok.AllArgsConstructor;
 import me.lucko.helper.Events;
+import me.lucko.helper.Schedulers;
 import me.lucko.helper.terminable.TerminableConsumer;
 import me.lucko.helper.terminable.module.TerminableModule;
 import org.bukkit.Location;
@@ -57,7 +59,7 @@ public class MachinePlaceListener implements TerminableModule {
                             .owner(player.getName())
                             .customName(machineData.getCustomName())
                             .machineDataId(machineData.getId())
-                            .encodedLocation(location.hashCode())
+                            .encodedLocation(EncodedLocation.encode(location).hashCode())
                             .fuelConsumeInterval(machineData.getSpendFuelInterval())
                             .build();
 
@@ -66,7 +68,7 @@ public class MachinePlaceListener implements TerminableModule {
                         return;
                     }
 
-                    event.getBlock().setType(machineData.getItem().getType());
+                    Schedulers.sync().runLater(() -> event.getBlock().setType(machineData.getItem().getType()), 10);
                     cache.addMachine(machine);
 
                     player.setItemInHand(itemInHand.getAmount() > 1

@@ -29,7 +29,7 @@ public class MachineData {
     }
 
     public boolean placeSchematic(Player player, Location decode, Runnable completed) {
-        Collection<Location> locations = schematic.pasteSchematic(decode, player, completed, Schematic.Options.REALISTIC, Schematic.Options.IGNORE_TRANSPARENT);
+        Collection<Location> locations = schematic.pasteSchematic(decode, player, completed, Schematic.Options.REALISTIC);
         return locations != null && !locations.isEmpty();
     }
 

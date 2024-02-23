@@ -56,7 +56,7 @@ tasks.withType<ShadowJar> {
     archiveFileName.set("${project.name}-${project.version}.jar")
     destinationDirectory.set(file(project.rootDir.parent.toString() + "/artifacts"))
 
-    relocate("de.tr7zw.changeme.nbtapi", "com.yuhtin.quotes.machines.libs.nbtapi")
+    relocate("de.tr7zw.nbtapi", "com.yuhtin.quotes.machines.libs.nbtapi")
     relocate("com.henryfabio.minecraft.inventoryapi", "com.yuhtin.quotes.machines.libs.inventoryapi")
     relocate("com.henryfabio.sqlprovider", "com.yuhtin.quotes.machines.libs.sqlprovider")
     relocate("com.zaxxer.hikari", "com.yuhtin.quotes.machines.libs.hikari")

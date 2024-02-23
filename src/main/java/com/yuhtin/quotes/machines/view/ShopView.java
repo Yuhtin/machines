@@ -54,11 +54,13 @@ public class ShopView extends PagedInventory {
             ).defaultCallback(callback -> {
                 Player player = callback.getPlayer();
 
-                if (!VaultAPI.instance().withdraw(player, data.getPrice())) {
+                if (!VaultAPI.instance().has(player, data.getPrice())) {
                     player.sendMessage(colorize("&cVocê não tem dinheiro suficiente para comprar esta mineradora."));
                     player.playSound(player.getLocation(), "entity.villager.no", 1, 1);
                     return;
                 }
+
+                VaultAPI.instance().withdraw(player, data.getPrice());
 
                 player.getInventory().addItem(data.generateItem()).forEach((index, item) -> player.getWorld().dropItem(player.getLocation(), item));
                 player.sendMessage(colorize("&aVocê comprou uma mineradora por $ " + data.getPrice() + "."));
