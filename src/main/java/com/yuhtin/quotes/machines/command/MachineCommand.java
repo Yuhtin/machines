@@ -1,5 +1,6 @@
 package com.yuhtin.quotes.machines.command;
 
+import com.yuhtin.quotes.machines.MachinesPlugin;
 import com.yuhtin.quotes.machines.cache.FuelCache;
 import com.yuhtin.quotes.machines.cache.MachineDataCache;
 import com.yuhtin.quotes.machines.model.Fuel;
@@ -65,6 +66,7 @@ public class MachineCommand implements TerminableModule {
                 }
 
                 if (arg.equalsIgnoreCase("reload")) {
+                    MachinesPlugin.getInstance().reloadConfig();
                     FuelCache.instance().reload();
                     MachineDataCache.instance().reload();
 
@@ -76,6 +78,8 @@ public class MachineCommand implements TerminableModule {
                 context.reply("&e/mineradoras fuel <player> <id> <quantidade> - &7Giva combustíveis para um player");
                 context.reply("&e/mineradoras give <player> <id> <quantidade> - &7Giva mineradoras para um player");
                 context.reply("&e/mineradoras reload - &7Recarrega os dados do sistema");
+
+                return;
             }
 
             if (context.sender() instanceof Player) {

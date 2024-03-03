@@ -1,6 +1,7 @@
 package com.yuhtin.quotes.machines.model;
 
 import com.yuhtin.quotes.machines.schematic.Schematic;
+import com.yuhtin.quotes.machines.util.CardinalDirection;
 import com.yuhtin.quotes.machines.util.ItemBuilder;
 import de.tr7zw.nbtapi.NBTItem;
 import lombok.Builder;

@@ -53,9 +53,17 @@ public class FuelCache {
         for (String key : config.getKeys(false)) {
             ConfigurationSection section = config.getConfigurationSection(key);
 
+            ItemStack item = ItemParser.of(section).parseItem();
+            if (item == null) continue;
+
+            NBTItem nbtItem = new NBTItem(item);
+
+            int value = Integer.parseInt(key);
+            nbtItem.setInteger("fuel-data", value);
+
             Fuel fuel = new Fuel(
-                    Integer.parseInt(key),
-                    ItemParser.of(section).parseItem()
+                    value,
+                    nbtItem.getItem()
             );
 
             register(fuel);

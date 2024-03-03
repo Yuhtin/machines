@@ -6,7 +6,8 @@ import com.yuhtin.quotes.machines.cache.MachineDataCache;
 import com.yuhtin.quotes.machines.model.Fuel;
 import com.yuhtin.quotes.machines.model.Machine;
 import com.yuhtin.quotes.machines.model.MachineData;
-import com.yuhtin.quotes.machines.util.EncodedLocation;
+import com.yuhtin.quotes.machines.util.CardinalDirection;
+import com.yuhtin.quotes.machines.util.SimpleLocation;
 import com.yuhtin.quotes.machines.view.ViewCache;
 import lombok.AllArgsConstructor;
 import me.lucko.helper.Events;
@@ -59,11 +60,13 @@ public class MachinePlaceListener implements TerminableModule {
                             .owner(player.getName())
                             .customName(machineData.getCustomName())
                             .machineDataId(machineData.getId())
-                            .encodedLocation(EncodedLocation.encode(location).hashCode())
+                            .simpleLocation(SimpleLocation.encode(location))
                             .fuelConsumeInterval(machineData.getSpendFuelInterval())
+                            .yawPlaced(player.getEyeLocation().getYaw())
+                            .direction(CardinalDirection.getCardinalDirection(player))
                             .build();
 
-                    if (!machine.pasteSchematic(player, location.getWorld())) {
+                    if (!machine.pasteSchematic(player)) {
                         player.sendMessage(colorize("&cNão é possível colocar a máquina aqui pois não há espaço suficiente."));
                         return;
                     }
@@ -114,10 +117,10 @@ public class MachinePlaceListener implements TerminableModule {
 
                     block.setType(Material.AIR);
 
-                    machine.cleanUpSchematic(block.getWorld());
-                    cache.removeMachine(machine.getEncodedLocation());
+                    machine.cleanUpSchematic();
+                    cache.removeMachine(machine.getSimpleLocation());
 
-                    player.getInventory().addItem(dataCache.get(machine.getMachineDataId()).getItem())
+                    player.getInventory().addItem(dataCache.get(machine.getMachineDataId()).generateItem())
                             .forEach((index, item) -> player.getWorld().dropItemNaturally(block.getLocation(), item));
 
                 }).bindWith(consumer);
@@ -149,17 +152,19 @@ public class MachinePlaceListener implements TerminableModule {
                     Player player = event.getPlayer();
                     ItemStack itemInHand = player.getItemInHand();
                     if (itemInHand != null) {
-                        Fuel fuel = FuelCache.instance().getByItem(itemInHand);
-                        if (fuel != null) {
-                            int requiredFuelId = MachineDataCache.instance().get(machine.getMachineDataId()).getRequiredFuelId();
-                            if (fuel.getId() == requiredFuelId) {
-                                machine.fuelUp(itemInHand.getAmount());
-                                player.setItemInHand(null);
-                            } else {
-                                player.sendMessage(colorize("&cEste combustível não é válido para esta máquina."));
-                            }
+                        if (itemInHand.getType() != Material.AIR && itemInHand.getAmount() > 0) {
+                            Fuel fuel = FuelCache.instance().getByItem(itemInHand);
+                            if (fuel != null) {
+                                int requiredFuelId = MachineDataCache.instance().get(machine.getMachineDataId()).getRequiredFuelId();
+                                if (fuel.getId() == requiredFuelId) {
+                                    machine.fuelUp(itemInHand.getAmount());
+                                    player.setItemInHand(null);
+                                } else {
+                                    player.sendMessage(colorize("&cEste combustível não é válido para esta máquina."));
+                                }
 
-                            return;
+                                return;
+                            }
                         }
                     }
 

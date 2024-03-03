@@ -24,7 +24,7 @@ machines:
       - ''
       - '&eClique para comprar!'
     requiredFuelId: 1
-    spendFuelInterval: 1
+    spendFuelInterval: 20
     price: 10000
     sellDropPrice: 5
     maxDrops: 2304

@@ -54,7 +54,7 @@ java {
 tasks.withType<ShadowJar> {
     archiveClassifier.set("")
     archiveFileName.set("${project.name}-${project.version}.jar")
-    destinationDirectory.set(file(project.rootDir.parent.toString() + "/artifacts"))
+    destinationDirectory.set(file("E:\\Downloads\\server_test\\plugins"))
 
     relocate("de.tr7zw.nbtapi", "com.yuhtin.quotes.machines.libs.nbtapi")
     relocate("com.henryfabio.minecraft.inventoryapi", "com.yuhtin.quotes.machines.libs.inventoryapi")

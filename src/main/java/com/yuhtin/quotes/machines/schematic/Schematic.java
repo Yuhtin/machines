@@ -8,6 +8,7 @@ import com.sk89q.worldedit.math.transform.AffineTransform;
 import com.sk89q.worldedit.session.ClipboardHolder;
 import com.sk89q.worldedit.world.block.BaseBlock;
 import com.yuhtin.quotes.machines.MachinesPlugin;
+import com.yuhtin.quotes.machines.util.CardinalDirection;
 import me.lucko.helper.Schedulers;
 import me.lucko.helper.bucket.Bucket;
 import me.lucko.helper.bucket.BucketPartition;
@@ -53,9 +54,9 @@ public class Schematic {
         if (clipboard == null) throw new IllegalArgumentException("Schematic file is not a valid schematic");
     }
 
-    public void cleanUpSchematic(Location loc, double yaw) {
+    public void cleanUpSchematic(Location loc, double yawPlaced) {
         ClipboardHolder clipboardHolder = new ClipboardHolder(clipboard);
-        clipboardHolder.setTransform(new AffineTransform().rotateY(yaw));
+        clipboardHolder.setTransform(new AffineTransform().rotateY(yawPlaced));
 
         Clipboard transformedClipboard = clipboardHolder.getClipboard();
 
@@ -119,18 +120,22 @@ public class Schematic {
      */
     @Nullable
     public Collection<Location> pasteSchematic(final Location loc, final Player paster, Runnable runnable, final int time, final Options... option) {
+        paster.sendMessage("§aAguarde um momento, estamos preparando a máquina...");
+
         final Map<Location, BaseBlock> pasteBlocks = new LinkedHashMap<>();
         final List<Options> options = Arrays.asList(option);
         try {
             final Data tracker = new Data();
 
-            double yaw = roundHalfUp((int) paster.getEyeLocation().getYaw());
+            double yaw = paster.getEyeLocation().getYaw();
+            yaw = roundHalfUp((int) yaw);
 
-            ClipboardHolder clipboardHolder = new ClipboardHolder(clipboard);
+            final ClipboardHolder clipboardHolder = new ClipboardHolder(clipboard);
+
             clipboardHolder.setTransform(new AffineTransform().rotateY(yaw));
+            final Clipboard transformedClipboard = clipboardHolder.getClipboard();
 
-            Clipboard transformedClipboard = clipboardHolder.getClipboard();
-
+            // Get all blocks in the schematic
             final BlockVector3 minimumPoint = transformedClipboard.getMinimumPoint();
             final BlockVector3 maximumPoint = transformedClipboard.getMaximumPoint();
             final int minX = minimumPoint.getX();
@@ -143,9 +148,6 @@ public class Schematic {
             final int width = transformedClipboard.getRegion().getWidth();
             final int height = transformedClipboard.getRegion().getHeight();
             final int length = transformedClipboard.getRegion().getLength();
-            final int widthCentre = width / 2;
-            final int heightCentre = height / 2;
-            final int lengthCentre = length / 2;
 
             int minBlockY = loc.getWorld().getMaxHeight();
             for (int x = minX; x <= maxX; x++) {
@@ -157,12 +159,8 @@ public class Schematic {
                         // Ignore air blocks, change if you want
                         if (block.getBlockType().getMaterial().isAir()) continue;
 
-                        // Here we find the relative offset based off the current location.
-                        final double offsetX = Math.abs(maxX - x);
-                        final double offsetY = Math.abs(maxY - y);
-                        final double offsetZ = Math.abs(maxZ - z);
+                        final Location offsetLoc = new Location(loc.getWorld(), loc.getX() + (maxX - x), loc.getY() + (maxY - y), loc.getZ() + (maxZ - z));
 
-                        final Location offsetLoc = loc.clone().subtract(offsetX - widthCentre, offsetY - heightCentre, offsetZ - lengthCentre);
                         if (offsetLoc.getBlockY() < minBlockY) minBlockY = offsetLoc.getBlockY();
                         pasteBlocks.put(offsetLoc, block);
                     }
@@ -235,6 +233,7 @@ public class Schematic {
                 tracker.trackCurrentBlock++;
 
                 if (tracker.trackCurrentBlock >= pasteBlocks.size()) {
+                    runnable.run();
                     task.get().stop();
                     tracker.trackCurrentBlock = 0;
                 }
@@ -261,7 +260,7 @@ public class Schematic {
      * @return list of locations where schematic blocks will be pasted, null if schematic locations will replace blocks
      */
     public Collection<Location> pasteSchematic(final Location location, final Player paster, Runnable runnable, final Options... options) {
-        return pasteSchematic(location, paster, runnable, 20, options);
+        return pasteSchematic(location, paster, runnable, 1, options);
     }
 
     /**

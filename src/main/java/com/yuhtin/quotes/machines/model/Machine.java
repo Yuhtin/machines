@@ -1,12 +1,11 @@
 package com.yuhtin.quotes.machines.model;
 
-import com.yuhtin.quotes.machines.cache.MachineCache;
 import com.yuhtin.quotes.machines.cache.MachineDataCache;
-import com.yuhtin.quotes.machines.util.EncodedLocation;
+import com.yuhtin.quotes.machines.util.CardinalDirection;
+import com.yuhtin.quotes.machines.util.SimpleLocation;
 import lombok.Builder;
 import lombok.Data;
 import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 @Data
@@ -14,7 +13,8 @@ import org.bukkit.entity.Player;
 public class Machine {
 
     private final String owner, customName;
-    private final int encodedLocation;
+    private final SimpleLocation simpleLocation;
+    private final CardinalDirection direction;
     private final double yawPlaced, maxDrops;
     private final int machineDataId, fuelConsumeInterval;
 
@@ -59,21 +59,38 @@ public class Machine {
         cycles = -1;
     }
 
-    public boolean pasteSchematic(Player player, World world) {
+    public boolean pasteSchematic(Player player) {
         MachineDataCache cache = MachineDataCache.instance();
         MachineData data = cache.get(machineDataId);
         if (data == null) return false;
 
         buildingSchematic = true;
-        return data.placeSchematic(player, EncodedLocation.of(encodedLocation).decode(world), () -> buildingSchematic = false);
+
+        return data.placeSchematic(player, schematicLocation(), () -> buildingSchematic = false);
     }
 
-    public void cleanUpSchematic(World world) {
+    private Location schematicLocation() {
+        Location location = simpleLocation.decode();
+
+        if (direction == CardinalDirection.NORTH) {
+            location = location.add(0, 0, -1);
+        } else if (direction == CardinalDirection.SOUTH) {
+            location = location.add(0, 0, 1);
+        } else if (direction == CardinalDirection.EAST) {
+            location = location.add(1, 0, 0);
+        } else if (direction == CardinalDirection.WEST) {
+            location = location.add(-1, 0, 0);
+        }
+
+        return location;
+    }
+
+    public void cleanUpSchematic() {
         MachineDataCache cache = MachineDataCache.instance();
         MachineData data = cache.get(machineDataId);
         if (data == null) return;
 
-        data.cleanUpSchematic(EncodedLocation.of(encodedLocation).decode(world), yawPlaced);
+        data.cleanUpSchematic(schematicLocation(), yawPlaced);
     }
 
     @Override
@@ -81,11 +98,11 @@ public class Machine {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
         Machine machine = (Machine) obj;
-        return encodedLocation == machine.encodedLocation;
+        return simpleLocation == machine.simpleLocation;
     }
 
     public boolean equals(Location location) {
-        return encodedLocation == EncodedLocation.encode(location).hashCode();
+        return simpleLocation.equals(SimpleLocation.encode(location));
     }
 
 }

@@ -27,8 +27,9 @@ public final class MachineRepository {
 
     public void createTable() {
         sqlExecutor.updateQuery("CREATE TABLE IF NOT EXISTS " + TABLE + "(" +
-                "encodedLocation INT NOT NULL PRIMARY KEY," +
+                "location LONGTEXT NOT NULL PRIMARY KEY," +
                 "username CHAR(36) NOT NULL," +
+                "cardinalDirection CHAR(36) NOT NULL DEFAULT 'NORTH'," +
                 "yawPlaced DOUBLE NOT NULL DEFAULT 0," +
                 "machine_data_id INT NOT NULL," +
                 "active BOOLEAN NOT NULL DEFAULT FALSE," +
@@ -56,8 +57,9 @@ public final class MachineRepository {
         Schedulers.async().run(() -> sqlExecutor.updateQuery(
                 "REPLACE INTO " + TABLE + " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 statement -> {
-                    statement.set(1, machine.getEncodedLocation());
+                    statement.set(1, machine.getSimpleLocation());
                     statement.set(2, machine.getOwner());
+                    statement.set(3, machine.getDirection().name());
                     statement.set(3, machine.getYawPlaced());
                     statement.set(4, machine.getMachineDataId());
                     statement.set(5, machine.isActive());
