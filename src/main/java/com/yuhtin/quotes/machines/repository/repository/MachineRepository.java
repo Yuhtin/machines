@@ -55,17 +55,17 @@ public final class MachineRepository {
 
     public void insert(Machine machine) {
         Schedulers.async().run(() -> sqlExecutor.updateQuery(
-                "REPLACE INTO " + TABLE + " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                "REPLACE INTO " + TABLE + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 statement -> {
                     statement.set(1, machine.getSimpleLocation());
                     statement.set(2, machine.getOwner());
                     statement.set(3, machine.getDirection().name());
-                    statement.set(3, machine.getYawPlaced());
-                    statement.set(4, machine.getMachineDataId());
-                    statement.set(5, machine.isActive());
-                    statement.set(6, machine.getCycles());
-                    statement.set(7, machine.getFuelAmount());
-                    statement.set(8, machine.getDrops());
+                    statement.set(4, machine.getYawPlaced());
+                    statement.set(5, machine.getMachineDataId());
+                    statement.set(6, machine.isActive());
+                    statement.set(7, machine.getCycles());
+                    statement.set(8, machine.getFuelAmount());
+                    statement.set(9, machine.getDrops());
                 }
         ));
     }
